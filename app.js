@@ -90,11 +90,11 @@ app.get('/products', (req, res) => {
         let html = '<h1>Products</h1>';
         html += '<table border="1">';
         html += '<tr>';
-
-        // Add table headers dynamically based on the keys of the first product object
-        Object.keys(results[0]).forEach(column => {
-            html += '<th>' + column + '</th>';
-        });
+        html += '<th>Product Id</th>';
+        html += '<th>Description</th>';
+        html += '<th>Supplier</th>';
+        html += '<th>Store ID</th>';
+        html += '<th>Price</th>';
         html += '</tr>';
 
         // Add table rows for each product
@@ -162,7 +162,7 @@ app.post('/store/update/:sid', (req, res) => {
             return;
         }
 
-        if (results.length > 0) {
+        if (results.length > 0 && results.length <8) {
             // Manager ID is already assigned to another store
             let html = `
                 <h1>Edit Store</h1>
