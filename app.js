@@ -9,7 +9,7 @@ const dbConfig = {
   user: 'root', // mysql username
   password: 'root', // mysql password
   database: 'proj2023' // database name
-};
+}; //testing commit (didnt commit first time)
 
 const connection = mysql.createConnection(dbConfig);
 
