@@ -4,6 +4,9 @@ const app = express();
 const port = 5000; // Port that the application will run on
 const bodyParser = require('body-parser'); // Was getting errors before adding this
 
+// Serve static files from the "public" directory
+app.use(express.static('public'));
+
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(bodyParser.json());
@@ -26,9 +29,6 @@ connection.connect(err => {
     console.log('Connected to Database!');
 });
 
-// Serve static files from the "public" directory
-app.use(express.static('public'));
-
 // Serve your main HTML file for the root route
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/main.html');
@@ -46,7 +46,6 @@ app.get('/store', (req, res) => {
 
         let html = `
         <h1>Store</h1>
-        <a href="/add-store">Add Store</a>
         <table border="1">
           <tr>
             <th>SID</th>
@@ -73,44 +72,57 @@ app.get('/store', (req, res) => {
 
 // Route to handle viewing products
 app.get('/products', (req, res) => {
+    // Using LEFT JOIN to ensure all products are included even if they don't have a corresponding store_id or location
     const sqlQuery = `
-      SELECT p.*, ps.*
-      FROM product AS p
-      JOIN product_store AS ps ON p.pid = ps.pid
+        SELECT p.pid as 'Product ID', 
+               p.productdesc as 'Description', 
+               ps.sid as 'Store ID', 
+               s.location as 'Location', 
+               ps.price as 'Price'
+        FROM product AS p
+        LEFT JOIN product_store AS ps ON p.pid = ps.pid
+        LEFT JOIN store AS s ON ps.sid = s.sid
     `;
 
     connection.query(sqlQuery, (error, results) => {
         if (error) {
-            console.error('Database query error: ', error); // Log detailed error
+            console.error('Database query error: ', error);
             res.status(500).send('Error fetching data from the database: ' + error.message);
             return;
         }
 
-        // Create an HTML string to display the data in a table
         let html = '<h1>Products</h1>';
         html += '<table border="1">';
         html += '<tr>';
-        html += '<th>Product Id</th>';
+        html += '<th>Product ID</th>';
         html += '<th>Description</th>';
-        html += '<th>Supplier</th>';
         html += '<th>Store ID</th>';
+        html += '<th>Location</th>';
         html += '<th>Price</th>';
+        html += '<th>Action</th>';
         html += '</tr>';
 
-        // Add table rows for each product
+        // Generate table rows for each product
         results.forEach(product => {
             html += '<tr>';
-            Object.values(product).forEach(value => {
-                html += '<td>' + value + '</td>';
-            });
+            html += `<td>${product['Product ID'] || ''}</td>`;
+            html += `<td>${product['Description'] || ''}</td>`;
+            html += `<td>${product['Store ID'] || ''}</td>`;
+            html += `<td>${product['Location'] || ''}</td>`;
+            html += `<td>${product['Price'] ? product['Price'].toFixed(2) : ''}</td>`; // Format price to two decimal places
+            html += `<td><a href="/product/delete/${product['Product ID']}">Delete</a></td>`;
             html += '</tr>';
         });
+
         html += '</table>';
+
+        html += '<br><a href="/"><button>Home</button></a>';
 
         // Send the HTML to the client
         res.send(html);
     });
 });
+
 
 app.get('/store/edit/:sid', (req, res) => {
     const sid = req.params.sid;
@@ -194,6 +206,46 @@ app.post('/store/update/:sid', (req, res) => {
         }
     });
 });
+
+app.get('/product/delete/:pid', (req, res) => {
+    const { pid } = req.params; // Get the product ID (pid) from the URL parameters
+
+    // First, check if the product is associated with any store
+    const checkProductQuery = 'SELECT * FROM product_store WHERE pid = ?';
+
+    connection.query(checkProductQuery, [pid], (checkError, checkResults) => {
+        if (checkError) {
+            // Handle database error
+            res.status(500).send('Error checking product: ' + checkError.message);
+            return;
+        }
+
+        if (checkResults.length > 0) {
+            // The product is associated with a store, so don't delete it
+            let htmlResponse = `
+                <h1>Error Message</h1>
+                <p>${pid} is currently in stores and cannot be deleted</p>
+                <a href="/"><button>Home</button></a>
+            `;
+            res.status(400).send(htmlResponse);
+        } else {
+            // The product is not associated with any store, proceed with deletion
+            const deleteQuery = 'DELETE FROM product WHERE pid = ?';
+
+            connection.query(deleteQuery, [pid], (deleteError, deleteResults) => {
+                if (deleteError) {
+                    // Handle error (e.g., product not found, referential integrity violation, etc.)
+                    res.status(500).send('Error deleting product: ' + deleteError.message);
+                    return;
+                }
+
+                // If successful, redirect to the products page or display a success message
+                res.redirect('/products');
+            });
+        }
+    });
+});
+
 
 
 // Start the server
