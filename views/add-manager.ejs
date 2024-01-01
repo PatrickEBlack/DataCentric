@@ -7,6 +7,7 @@
 <body>
     <h1>Add Manager</h1>
     <form action="/managers/add" method="post">
+        <!-- All requirements for adding a new manager (e.g. Salary must be al least 30,000 and less than 70,000) -->
         <label for="managerId">Manager ID:</label>
         <input type="text" id="managerId" name="managerId" required pattern=".{4}" title="Manager ID must be 4 characters">
         <label for="name">Name:</label>

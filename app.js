@@ -266,7 +266,7 @@ app.get('/product/delete/:pid', (req, res) => {
 
             connection.query(deleteQuery, [pid], (deleteError, deleteResults) => {
                 if (deleteError) {
-                    // Handle error (e.g., product not found, referential integrity violation, etc.)
+                    // Handle error (e.g., product not found, etc.)
                     res.status(500).send('Error deleting product: ' + deleteError.message);
                     return;
                 }
@@ -293,11 +293,12 @@ app.get('/managers', async (req, res) => {
     }
   });
 
-// Tried to create the add Manager Function (It did not work!!!!!)
+// Add Managers Get Function
 app.get('/managers/add', (req, res) => {
     res.render('add-manager'); 
 });
 
+// Add Managers Post Function
 app.post('/managers/add', async (req, res) => {
     try {
       const { managerId, name, salary } = req.body;
