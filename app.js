@@ -150,25 +150,51 @@ app.get('/store/edit/:sid', (req, res) => {
 });
 
 app.post('/store/update/:sid', (req, res) => {
-    const { sid } = req.params;
-    const { location, managerId } = req.body;
-  
-    // Here, you should add logic to validate the managerId according to your requirements
-    // For example, check if the managerId is not assigned to another store
-    // Since you're not using MongoDB, I'll skip this part
-  
-    // Update store data in the database
-    const updateQuery = 'UPDATE store SET location = ?, mgrid = ? WHERE sid = ?';
-    connection.query(updateQuery, [location, managerId, sid], (error, results) => {
-      if (error) {
-        res.status(500).send('Error updating store: ' + error.message);
-        return;
-      }
-  
-      // After successful update, redirect to the store list
-      res.redirect('/store');
+    const { sid } = req.params; // The store ID being updated (This cannot be changed)
+    const { location, managerId } = req.body; // New data from the form (Both location and manager Id can be changed)
+
+    // Check if the managerId is already assigned to a different store
+    const checkManagerQuery = 'SELECT * FROM store WHERE mgrid = ? AND sid != ?';
+
+    connection.query(checkManagerQuery, [managerId, sid], (error, results) => {
+        if (error) {
+            res.status(500).send('Error checking manager ID: ' + error.message);
+            return;
+        }
+
+        if (results.length > 0) {
+            // Manager ID is already assigned to another store
+            let html = `
+                <h1>Edit Store</h1>
+                <p>Manager: ${managerId} already managing another store</p>
+                <form action="/store/update/${sid}" method="post">
+                    <label for="sid">SID</label>
+                    <input type="text" id="sid" name="sid" value="${sid}" readonly><br>
+                    <label for="location">Location</label>
+                    <input type="text" id="location" name="location" value="${location}" required minlength="1"><br>
+                    <label for="managerId">Manager ID</label>
+                    <input type="text" id="managerId" name="managerId" value="${managerId}" required pattern=".{4}"><br>
+                    <button type="submit">Update</button>
+                </form>
+                <a href="/store">Home</a>
+            `;
+            res.send(html); // Send the form back with an error message
+        } else {
+            // If managerId is not assigned elsewhere, proceed to update the store
+            const updateQuery = 'UPDATE store SET location = ?, mgrid = ? WHERE sid = ?';
+            connection.query(updateQuery, [location, managerId, sid], (updateError, updateResults) => {
+                if (updateError) {
+                    res.status(500).send('Error updating store: ' + updateError.message);
+                    return;
+                }
+
+                // After successful update, redirect to the store list
+                res.redirect('/store');
+            });
+        }
     });
-  });
+});
+
 
 // Start the server
 app.listen(port, () => {
