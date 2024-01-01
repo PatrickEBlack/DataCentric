@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Manager</title>
+</head>
+<body>
+    <h1>Add Manager</h1>
+    <form action="/managers/add" method="post">
+        <label for="managerId">Manager ID:</label>
+        <input type="text" id="managerId" name="managerId" required pattern=".{4}" title="Manager ID must be 4 characters">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required minlength="6" title="Name must be greater than 5 characters">
+        <label for="salary">Salary:</label>
+        <input type="number" id="salary" name="salary" required min="30000" max="70000" title="Salary must be between 30,000 and 70,000">
+        <input type="submit" value="Add">
+    </form>
+    <a href="/managers">Back to Managers</a>
+</body>
+</html>

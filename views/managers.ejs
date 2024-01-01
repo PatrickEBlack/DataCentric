@@ -23,13 +23,13 @@
         </thead>
         <tbody>
             <% managers.forEach(function(manager) { %>
-                <tr>
-                    <td><%= manager._id %></td>
-                    <td><%= manager.name %></td>
-                    <td>$<%= manager.salary.toFixed(2) %></td>
-                </tr>
+              <tr>
+                <td><%= manager._id %></td>
+                <td><%= manager.name %></td>
+                <td>$<%= Number(manager.salary).toFixed(2) %></td>
+              </tr>
             <% }) %>
-        </tbody>
+          </tbody>
     </table>
 
     <a href="/">Home</a>

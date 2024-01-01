@@ -295,7 +295,7 @@ app.get('/managers', async (req, res) => {
 
 // Tried to create the add Manager Function (It did not work!!!!!)
 app.get('/managers/add', (req, res) => {
-    res.render('managers'); 
+    res.render('add-manager'); 
 });
 
 app.post('/managers/add', async (req, res) => {
@@ -303,6 +303,8 @@ app.post('/managers/add', async (req, res) => {
       const { managerId, name, salary } = req.body;
       const database = client.db("proj2023MongoDb");
       const managers = database.collection("managers");
+      const numericSalary = Number(salary);
+
   
       // Check for uniqueness of Manager ID
       const existingManager = await managers.findOne({ _id: managerId });
@@ -326,7 +328,11 @@ app.post('/managers/add', async (req, res) => {
       }
   
       // Insert the new manager
-      await managers.insertOne({ _id: managerId, name, salary });
+      await managers.insertOne({
+        _id: managerId,
+        name: name,
+        salary: numericSalary // Ensure salary is stored as a number
+    });
       res.redirect('/managers');
     } catch (err) {
       res.status(500).send('Error adding manager: ' + err.message);
